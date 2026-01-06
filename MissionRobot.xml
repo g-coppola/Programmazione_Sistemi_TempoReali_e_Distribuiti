@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+chan start_mission, wait_mission, end_mission;
+chan request_charge, start_charge, end_charge;
+chan go_work;</declaration>
+	<template>
+		<name>Robot_Controller</name>
+		<declaration>// Place local declarations here.
+clock t_work, t_battery, t_charge, t_go;</declaration>
+		<location id="id0" x="-280" y="-365">
+			<name x="-305" y="-407">Idle</name>
+		</location>
+		<location id="id1" x="121" y="-373">
+			<name x="111" y="-407">Working</name>
+			<label kind="invariant" x="145" y="-382">t_work &lt;=30</label>
+		</location>
+		<location id="id2" x="204" y="-229">
+			<name x="204" y="-263">Low_Battery</name>
+			<label kind="invariant" x="221" y="-238">t_go&lt;=10</label>
+		</location>
+		<location id="id3" x="77" y="-102">
+			<name x="51" y="-85">Going_to_Charge</name>
+			<label kind="invariant" x="76" y="-68">t_go&lt;=10</label>
+		</location>
+		<location id="id4" x="-220" y="-102">
+			<name x="-323" y="-136">Charging</name>
+			<label kind="invariant" x="-255" y="-85">t_charge&lt;=30</label>
+		</location>
+		<location id="id5" x="-433" y="-178">
+			<name x="-443" y="-212">Fault</name>
+			<committed/>
+		</location>
+		<location id="id6" x="-501" y="-510">
+			<name x="-511" y="-544">Wait</name>
+		</location>
+		<location id="id7" x="-170" y="-246">
+			<name x="-297" y="-263">Ret_to_Work</name>
+		</location>
+		<init ref="id6"/>
+		<transition id="id8">
+			<source ref="id7"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-26" y="-311">go_work!</label>
+			<label kind="assignment" x="-68" y="-289">t_work:=0, t_battery:=0</label>
+		</transition>
+		<transition id="id9">
+			<source ref="id4"/>
+			<target ref="id7"/>
+			<label kind="guard" x="-170" y="-221">t_charge&gt;=25</label>
+			<label kind="synchronisation" x="-178" y="-204">end_charge!</label>
+		</transition>
+		<transition id="id10">
+			<source ref="id6"/>
+			<target ref="id0"/>
+			<label kind="assignment" x="-425" y="-484">t_battery:=0</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id3"/>
+			<target ref="id5"/>
+			<label kind="guard" x="-195" y="0">t_go&gt;10</label>
+			<nail x="-221" y="8"/>
+		</transition>
+		<transition id="id12">
+			<source ref="id2"/>
+			<target ref="id5"/>
+			<label kind="guard" x="374" y="-127">t_go&gt;10</label>
+			<nail x="510" y="-8"/>
+			<nail x="-323" y="68"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id3"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-84" y="-144">start_charge?</label>
+			<label kind="assignment" x="-93" y="-127">t_charge := 0</label>
+		</transition>
+		<transition id="id14">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="136" y="-161">request_charge!</label>
+			<label kind="assignment" x="136" y="-144">t_go := 0</label>
+		</transition>
+		<transition id="id15">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="170" y="-331">t_battery&gt;=110</label>
+			<label kind="synchronisation" x="187" y="-297">wait_mission!</label>
+			<label kind="assignment" x="178" y="-314">t_go := 0</label>
+		</transition>
+		<transition id="id16">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-25" y="-509">t_work&gt;=10</label>
+			<label kind="synchronisation" x="-33" y="-492">end_mission!</label>
+			<nail x="-68" y="-501"/>
+		</transition>
+		<transition id="id17">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-178" y="-399">start_mission?</label>
+			<label kind="assignment" x="-136" y="-365">t_work := 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Mission_Manager</name>
+		<declaration>// Place local declarations here.
+clock t_mission;</declaration>
+		<location id="id18" x="-425" y="-195">
+			<name x="-435" y="-229">Wait</name>
+		</location>
+		<location id="id19" x="-51" y="-195">
+			<name x="-61" y="-229">Assign_Mission</name>
+			<label kind="invariant" x="-61" y="-178">t_mission&lt;=5</label>
+		</location>
+		<location id="id20" x="-279" y="-34">
+			<name x="-297" y="-17">Mission_Assigned</name>
+		</location>
+		<location id="id21" x="-484" y="0">
+			<name x="-578" y="8">Charging</name>
+		</location>
+		<init ref="id18"/>
+		<transition id="id22">
+			<source ref="id21"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="-374" y="51">go_work?</label>
+			<nail x="-433" y="110"/>
+			<nail x="-289" y="-25"/>
+		</transition>
+		<transition id="id23">
+			<source ref="id20"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-450" y="-42">wait_mission?</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id20"/>
+			<target ref="id18"/>
+			<label kind="synchronisation" x="-450" y="-110">end_mission?</label>
+		</transition>
+		<transition id="id25">
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="-195" y="-102">start_mission!</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="assignment" x="-306" y="-187">t_mission := 0</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Charging_Station</name>
+		<declaration>// Place local declarations here.
+clock t_station;</declaration>
+		<location id="id27" x="-561" y="-221">
+			<name x="-571" y="-255">Free</name>
+		</location>
+		<location id="id28" x="195" y="-221">
+			<name x="185" y="-255">Occupied</name>
+		</location>
+		<location id="id29" x="-221" y="-221">
+			<name x="-231" y="-255">Wait_Request</name>
+			<label kind="invariant" x="-282" y="-204">t_station &lt;= 4</label>
+		</location>
+		<init ref="id27"/>
+		<transition id="id30">
+			<source ref="id29"/>
+			<target ref="id28"/>
+			<label kind="guard" x="-51" y="-246">t_station &lt;=3</label>
+			<label kind="synchronisation" x="-51" y="-263">start_charge!</label>
+		</transition>
+		<transition id="id31">
+			<source ref="id27"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-459" y="-263">request_charge?</label>
+			<label kind="assignment" x="-450" y="-246">t_station := 0</label>
+		</transition>
+		<transition id="id32">
+			<source ref="id28"/>
+			<target ref="id27"/>
+			<label kind="synchronisation" x="-68" y="-93">end_charge?</label>
+			<nail x="-178" y="-34"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+RobotController = Robot_Controller();
+MissionManager = Mission_Manager();
+ChargingStation = Charging_Station();
+// List one or more processes to be composed into a system.
+system RobotController, MissionManager, ChargingStation;
+</system>
+	<queries>
+		<query>
+			<formula>A[] not deadlock</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2025-12-30 17:05:59 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; RobotController.Fault</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2025-12-30 17:06:19 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>RobotController.Working --&gt; RobotController.Idle or RobotController.Low_Battery</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-12-30 17:06:45 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>A[] (ChargingStation.Occupied imply RobotController.Charging)</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-12-30 17:13:18 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>RobotController.Low_Battery --&gt; RobotController.Charging</formula>
+			<comment/>
+			<result outcome="failure" type="quality" timestamp="2025-12-30 17:13:40 +0100">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; RobotController.Working</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-12-30 17:13:32 +0100">
+			</result>
+		</query>
+	</queries>
+</nta>
